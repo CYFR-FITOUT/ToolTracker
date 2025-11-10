@@ -1,6 +1,6 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
-import { Tool, ToolStatus } from '../types';
+import { Tool } from '../types';
+import { translations, Language } from "../i18n";
 
 if (!process.env.API_KEY) {
     console.error("API_KEY environment variable not set.");
@@ -37,9 +37,9 @@ const responseSchema = {
     required: ["name", "inventoryCode"]
 };
 
-export const parseToolFromNaturalLanguage = async (prompt: string): Promise<Omit<Tool, 'id' | 'status'>> => {
+export const parseToolFromNaturalLanguage = async (prompt: string, lang: Language): Promise<Omit<Tool, 'id' | 'status'>> => {
     try {
-        const systemInstruction = `You are a tool management assistant for a construction company. Your role is to parse user input into a structured JSON tool object. Extract the tool's name, its unique inventory code, a description if provided, and who it's assigned to (currentHolder) and where it is (currentLocation).`;
+        const systemInstruction = translations[lang].geminiSystemInstruction;
 
         const response = await ai.models.generateContent({
             model: model,
@@ -58,6 +58,6 @@ export const parseToolFromNaturalLanguage = async (prompt: string): Promise<Omit
 
     } catch (error) {
         console.error("Error parsing tool with Gemini:", error);
-        throw new Error("Failed to understand the tool details. Please try phrasing it differently.");
+        throw new Error(translations[lang].geminiError);
     }
 };

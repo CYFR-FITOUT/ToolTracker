@@ -6,6 +6,10 @@ import ToolModal from './components/TaskModal';
 import { PlusIcon } from './components/icons/PlusIcon';
 import { translations, Language } from './i18n';
 
+const apiUrl = process.env.NODE_ENV === 'production'
+  ? 'https://your-backend-url.com/api'
+  : 'http://localhost:3001/api';
+
 const App: React.FC = () => {
   const [tools, setTools] = useState<Tool[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,7 +23,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const fetchTools = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/tools');
+        const response = await fetch(`${apiUrl}/tools`);
         const data = await response.json();
         setTools(data);
       } catch (error) {
@@ -36,7 +40,7 @@ const App: React.FC = () => {
 
   const addTool = async (newToolData: Omit<Tool, 'id' | 'status'>) => {
     try {
-      const response = await fetch('http://localhost:3001/api/tools', {
+      const response = await fetch(`${apiUrl}/tools`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...newToolData, status: ToolStatus.InStock }),
@@ -50,7 +54,7 @@ const App: React.FC = () => {
 
   const updateTool = async (updatedTool: Tool) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/tools/${updatedTool.id}`, {
+      const response = await fetch(`${apiUrl}/tools/${updatedTool.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedTool),
@@ -65,7 +69,7 @@ const App: React.FC = () => {
 
   const deleteTool = async (toolId: string) => {
     try {
-      await fetch(`http://localhost:3001/api/tools/${toolId}`, {
+      await fetch(`${apiUrl}/tools/${toolId}`, {
         method: 'DELETE',
       });
       setTools(prev => prev.filter(tool => tool.id !== toolId));
@@ -81,7 +85,7 @@ const App: React.FC = () => {
     const updatedTool = { ...toolToMove, status: newStatus };
 
     try {
-      await fetch(`http://localhost:3001/api/tools/${toolId}`, {
+      await fetch(`${apiUrl}/tools/${toolId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedTool),

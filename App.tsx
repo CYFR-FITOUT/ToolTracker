@@ -6,16 +6,12 @@ import ToolModal from './components/TaskModal';
 import { PlusIcon } from './components/icons/PlusIcon';
 import { translations, Language } from './i18n';
 
+const apiUrl = process.env.NODE_ENV === 'production'
+  ? 'https://your-backend-url.com/api'
+  : 'http://localhost:3001/api';
+
 const App: React.FC = () => {
-  const [tools, setTools] = useState<Tool[]>(() => {
-    try {
-      const savedTools = localStorage.getItem('tools');
-      return savedTools ? JSON.parse(savedTools) : [];
-    } catch (error) {
-      console.error("Could not parse tools from localStorage", error);
-      return [];
-    }
-  });
+  const [tools, setTools] = useState<Tool[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTool, setEditingTool] = useState<Tool | null>(null);
   const [language, setLanguage] = useState<Language>(() => {
@@ -25,34 +21,79 @@ const App: React.FC = () => {
   const t = useMemo(() => translations[language], [language]);
 
   useEffect(() => {
-    localStorage.setItem('tools', JSON.stringify(tools));
-  }, [tools]);
+    const fetchTools = async () => {
+      try {
+        const response = await fetch(`${apiUrl}/tools`);
+        const data = await response.json();
+        setTools(data);
+      } catch (error) {
+        console.error("Failed to fetch tools", error);
+      }
+    };
+    fetchTools();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('language', language);
     document.documentElement.lang = language;
   }, [language]);
 
-  const addTool = (newToolData: Omit<Tool, 'id' | 'status'>) => {
-    const toolToAdd: Tool = {
-      ...newToolData,
-      id: `tool-${Date.now()}-${Math.random()}`,
-      status: ToolStatus.InStock,
-    };
-    setTools(prev => [toolToAdd, ...prev]);
+  const addTool = async (newToolData: Omit<Tool, 'id' | 'status'>) => {
+    try {
+      const response = await fetch(`${apiUrl}/tools`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newToolData, status: ToolStatus.InStock }),
+      });
+      const newTool = await response.json();
+      setTools(prev => [newTool, ...prev]);
+    } catch (error) {
+      console.error("Failed to add tool", error);
+    }
   };
 
-  const updateTool = (updatedTool: Tool) => {
-    setTools(prev => prev.map(tool => (tool.id === updatedTool.id ? updatedTool : tool)));
-    closeModal();
+  const updateTool = async (updatedTool: Tool) => {
+    try {
+      const response = await fetch(`${apiUrl}/tools/${updatedTool.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTool),
+      });
+      const updated = await response.json();
+      setTools(prev => prev.map(tool => (tool.id === updated.id ? updated : tool)));
+      closeModal();
+    } catch (error) {
+      console.error("Failed to update tool", error);
+    }
   };
 
-  const deleteTool = (toolId: string) => {
-    setTools(prev => prev.filter(tool => tool.id !== toolId));
+  const deleteTool = async (toolId: string) => {
+    try {
+      await fetch(`${apiUrl}/tools/${toolId}`, {
+        method: 'DELETE',
+      });
+      setTools(prev => prev.filter(tool => tool.id !== toolId));
+    } catch (error) {
+      console.error("Failed to delete tool", error);
+    }
   };
 
-  const moveTool = (toolId: string, newStatus: ToolStatus) => {
-    setTools(prev => prev.map(tool => (tool.id === toolId ? { ...tool, status: newStatus } : tool)));
+  const moveTool = async (toolId: string, newStatus: ToolStatus) => {
+    const toolToMove = tools.find(tool => tool.id === toolId);
+    if (!toolToMove) return;
+
+    const updatedTool = { ...toolToMove, status: newStatus };
+
+    try {
+      await fetch(`${apiUrl}/tools/${toolId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedTool),
+      });
+      setTools(prev => prev.map(tool => (tool.id === toolId ? updatedTool : tool)));
+    } catch (error) {
+      console.error("Failed to move tool", error);
+    }
   };
 
   const openModalForEdit = (tool: Tool) => {
@@ -70,15 +111,11 @@ const App: React.FC = () => {
     setEditingTool(null);
   };
 
-  const handleSaveTool = (toolData: Omit<Tool, 'id'>) => {
+  const handleSaveTool = async (toolData: Omit<Tool, 'id' | 'status'> & { status?: ToolStatus }) => {
     if (editingTool) {
-      updateTool({ ...toolData, id: editingTool.id });
+        await updateTool({ ...editingTool, ...toolData });
     } else {
-        const newTool: Tool = {
-            ...toolData,
-            id: `tool-${Date.now()}`
-        };
-        setTools(prev => [newTool, ...prev]);
+        await addTool(toolData);
     }
     closeModal();
   };

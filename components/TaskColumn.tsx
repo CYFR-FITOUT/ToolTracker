@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Tool, ToolStatus } from '../types';
 import ToolCard from './TaskCard';
+import { translations } from '../i18n';
 
 interface ToolColumnProps {
   title: string;
@@ -10,6 +10,7 @@ interface ToolColumnProps {
   onDeleteTool: (toolId: string) => void;
   onEditTool: (tool: Tool) => void;
   onMoveTool: (toolId: string, newStatus: ToolStatus) => void;
+  t: typeof translations.en;
 }
 
 const statusColorMap: Record<ToolStatus, string> = {
@@ -18,7 +19,7 @@ const statusColorMap: Record<ToolStatus, string> = {
   [ToolStatus.InRepair]: 'border-orange-500',
 };
 
-const ToolColumn: React.FC<ToolColumnProps> = ({ title, status, tools, onDeleteTool, onEditTool, onMoveTool }) => {
+const ToolColumn: React.FC<ToolColumnProps> = ({ title, status, tools, onDeleteTool, onEditTool, onMoveTool, t }) => {
   return (
     <div className={`bg-gray-800/60 rounded-xl p-4 min-h-[300px] flex flex-col border-t-4 ${statusColorMap[status]}`}>
       <div className="flex justify-between items-center mb-4">
@@ -35,12 +36,13 @@ const ToolColumn: React.FC<ToolColumnProps> = ({ title, status, tools, onDeleteT
               tool={tool} 
               onDelete={onDeleteTool} 
               onEdit={onEditTool} 
-              onMove={onMoveTool} 
+              onMove={onMoveTool}
+              t={t}
             />
           ))
         ) : (
           <div className="text-center text-gray-500 py-10">
-            <p>No tools here.</p>
+            <p>{t.noToolsHere}</p>
           </div>
         )}
       </div>

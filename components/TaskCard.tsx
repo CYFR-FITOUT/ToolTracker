@@ -1,14 +1,15 @@
-
 import React from 'react';
 import { Tool, ToolStatus } from '../types';
 import { TrashIcon } from './icons/TrashIcon';
 import { EditIcon } from './icons/EditIcon';
+import { translations } from '../i18n';
 
 interface ToolCardProps {
   tool: Tool;
   onDelete: (id: string) => void;
   onEdit: (tool: Tool) => void;
   onMove: (id: string, newStatus: ToolStatus) => void;
+  t: typeof translations.en;
 }
 
 const statusBorderColor: Record<ToolStatus, string> = {
@@ -18,7 +19,7 @@ const statusBorderColor: Record<ToolStatus, string> = {
 };
 
 
-const ToolCard: React.FC<ToolCardProps> = ({ tool, onDelete, onEdit, onMove }) => {
+const ToolCard: React.FC<ToolCardProps> = ({ tool, onDelete, onEdit, onMove, t }) => {
   const { id, name, description, status, inventoryCode, currentHolder, currentLocation } = tool;
 
   const handleMove = (direction: 'forward' | 'backward') => {
@@ -42,8 +43,8 @@ const ToolCard: React.FC<ToolCardProps> = ({ tool, onDelete, onEdit, onMove }) =
       {description && <p className="text-gray-400 text-sm my-2">{description}</p>}
       
       <div className="text-sm text-gray-300 mt-2 space-y-1">
-        {currentHolder && <div><span className="font-semibold text-gray-400">Holder:</span> {currentHolder}</div>}
-        {currentLocation && <div><span className="font-semibold text-gray-400">Location:</span> {currentLocation}</div>}
+        {currentHolder && <div><span className="font-semibold text-gray-400">{t.holderLabel}</span> {currentHolder}</div>}
+        {currentLocation && <div><span className="font-semibold text-gray-400">{t.locationLabel}</span> {currentLocation}</div>}
       </div>
 
       <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-600">

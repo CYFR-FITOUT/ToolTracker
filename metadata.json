@@ -1,0 +1,5 @@
+{
+  "name": "CYFR_ToolTracker",
+  "description": "An intelligent tool tracking application for construction companies, powered by the Gemini API. Users can register tools and track their movement using natural language. The interface features a clean, Kanban-style board to visualize tools across different statuses and locations.",
+  "requestFramePermissions": []
+}
